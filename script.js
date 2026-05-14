@@ -1,30 +1,27 @@
-// DOm elements
-const startScreen=document.getElementById('start-screen');
-const quizScreen=document.getElementById('quiz-screen');
-const resultScreen=document.getElementById('result-screen');
-const startButton=document.getElementById('start-btn');
-const questionText=document.getElementById('question-text');
-const answersContainer=document.getElementById('answers-container');
-const currentQuestionSpan=document.getElementById('current-question');
-const totalQuestionsSpan=document.getElementById('total-questions');
-const scoreSpan=document.getElementById('score');
-const finalScoreSpan=document.getElementById('final-score');
-const maxScoreSpan=document.getElementById('max-score');
-const resultMessage=document.getElementById('result-message');
-const restartButton=document.getElementById('restart-btn');
-const progressBar=document.getElementById('progress-bar');
+// DOM Elements
+const startScreen = document.getElementById("start-screen");
+const quizScreen = document.getElementById("quiz-screen");
+const resultScreen = document.getElementById("result-screen");
+const startButton = document.getElementById("start-btn");
+const questionText = document.getElementById("question-text");
+const answersContainer = document.getElementById("answers-container");
+const currentQuestionSpan = document.getElementById("current-question");
+const totalQuestionsSpan = document.getElementById("total-questions");
+const scoreSpan = document.getElementById("score");
+const finalScoreSpan = document.getElementById("final-score");
+const maxScoreSpan = document.getElementById("max-score");
+const resultMessage = document.getElementById("result-message");
+const restartButton = document.getElementById("restart-btn");
+const progressBar = document.getElementById("progress");
 
-
-
-// Quiz data
 const quizQuestions = [
   {
-    question: "What is the capital of Nepal?",
+    question: "What is the capital of France?",
     answers: [
-      { text: "Saptari", correct: false },
-      { text: "Janakpur", correct: false },
-      { text: "Kathmandu", correct: true },
-      { text: "Biratnagar", correct: false },
+      { text: "London", correct: false },
+      { text: "Berlin", correct: false },
+      { text: "Paris", correct: true },
+      { text: "Madrid", correct: false },
     ],
   },
   {
@@ -65,94 +62,117 @@ const quizQuestions = [
   },
 ];
 
+// QUIZ STATE VARS
+let currentQuestionIndex = 0;
+let score = 0;
+let answersDisabled = false;
 
-//quiz state variables
- let currentQuestionIndex=0;
- let score=0;
- let answersDisabled=false;
+totalQuestionsSpan.textContent = quizQuestions.length;
+maxScoreSpan.textContent = quizQuestions.length;
 
- totalQuestionsSpan.textContent=quizQuestions.length;
- maxScoreSpan.textContent=quizQuestions.length;
+// event listeners
+startButton.addEventListener("click", startQuiz);
+restartButton.addEventListener("click", restartQuiz);
 
+function startQuiz() {
+  // reset vars
+  currentQuestionIndex = 0;
+  score = 0;
+  scoreSpan.textContent = 0;
 
- //event listeners
- startButton.addEventListener('click',startQuiz);
- restartButton.addEventListener('click',restartQuiz);
+  startScreen.classList.remove("active");
+  quizScreen.classList.add("active");
 
- function startQuiz(){
-    
-    //reset variables
+  showQuestion();
+}
 
-    currentQuestionIndex=0;
-    score=0;
-    ScoreSpan.textContent=score;
+function showQuestion() {
+  // reset state
+  answersDisabled = false;
 
-    startScreen.classList.remove('active');
-    quizScreen.classList.add('active');
+  const currentQuestion = quizQuestions[currentQuestionIndex];
 
-    showQuestion();
+  currentQuestionSpan.textContent = currentQuestionIndex + 1;
 
+  const progressPercent = (currentQuestionIndex / quizQuestions.length) * 100;
+  progressBar.style.width = progressPercent + "%";
 
- }
+  questionText.textContent = currentQuestion.question;
 
- function showQuestion(){
+  answersContainer.innerHTML = "";
 
-    //reset state
-    answersDisabled=false;
-    const currentQuestion=quizQuestions[currentQuestionIndex];
-    currentQuestionSpan.textContent=currentQuestionIndex+1;
+  currentQuestion.answers.forEach((answer) => {
+    const button = document.createElement("button");
+    button.textContent = answer.text;
+    button.classList.add("answer-btn");
 
-    const progessPercent=(currentQuestionIndex/quizQuestions.length)*100;
-    progressBar.style.width=progessPercent+"%";
+    // what is dataset? it's a property of the button element that allows you to store custom data
+    button.dataset.correct = answer.correct;
 
-    qestionText.textContent=currentQuestion.question;
+    button.addEventListener("click", selectAnswer);
 
+    answersContainer.appendChild(button);
+  });
+}
 
-    //clear previous answers
-    answersContainer.innerHTML='';
-    currentQuestion.answers.forEach(answers=>{
-            const button=document.createElement('button');
-            button.textContent=answers.text;
-            button.classList.add('answer-btn');
+function selectAnswer(event) {
+  // optimization check
+  if (answersDisabled) return;
 
-// what is dataset? dataset is a property of HTML elements that allows you to store custom data attributes on the element. These attributes are prefixed with "data-" and can be accessed using JavaScript through the dataset property. In this case, we are storing whether the answer is correct or not in the dataset of the button element. This allows us to easily check if the selected answer is correct when the user clicks on it.
-            button.dataset.correct=answers.correct;
+  answersDisabled = true;
 
-            button.addEventListener('click',selectAnswer);
+  const selectedButton = event.target;
+  const isCorrect = selectedButton.dataset.correct === "true";
 
-            answersContainer.appendChild(button);
-    })
- }
-
- function selectAnswer(event){
- // optimization 
-    if(answersDisabled) return;
-
-
-    answersDisabled=true; 
-     const selectedButton=event.target;
-     const isCorrect=selectedButton.dataset.correct==='true';
-
-
-     //toodo : 
-     Array.from(answersContainer.children).forEach(button=>{
-
-        if(button.dataset.correct==='true'){
-            button.classList.add('correct');
- }
-        else{
-            button.classList.add('incorrect');
-        }
-    });
-
-    if(isCorrect){
-        score++;
-        scoreSpan.textContent=score;
+  // Here Array.from() is used to convert the NodeList returned by answersContainer.children into an array, this is because the NodeList is not an array and we need to use the forEach method
+  Array.from(answersContainer.children).forEach((button) => {
+    if (button.dataset.correct === "true") {
+      button.classList.add("correct");
+    } else if (button === selectedButton) {
+      button.classList.add("incorrect");
     }
-    
+  });
 
+  if (isCorrect) {
+    score++;
+    scoreSpan.textContent = score;
+  }
 
- function restartQuiz(){
-    console.log("Quiz re-started");
- }
+  setTimeout(() => {
+    currentQuestionIndex++;
 
+    // check if there are more questions or if the quiz is over
+    if (currentQuestionIndex < quizQuestions.length) {
+      showQuestion();
+    } else {
+      showResults();
+    }
+  }, 1000);
+}
+
+function showResults() {
+  quizScreen.classList.remove("active");
+  resultScreen.classList.add("active");
+
+  finalScoreSpan.textContent = score;
+
+  const percentage = (score / quizQuestions.length) * 100;
+
+  if (percentage === 100) {
+    resultMessage.textContent = "Perfect! You're a genius!";
+  } else if (percentage >= 80) {
+    resultMessage.textContent = "Great job! You know your stuff!";
+  } else if (percentage >= 60) {
+    resultMessage.textContent = "Good effort! Keep learning!";
+  } else if (percentage >= 40) {
+    resultMessage.textContent = "Not bad! Try again to improve!";
+  } else {
+    resultMessage.textContent = "Keep studying! You'll get better!";
+  }
+}
+
+function restartQuiz() {
+  resultScreen.classList.remove("active");
+
+  startQuiz();
+}
